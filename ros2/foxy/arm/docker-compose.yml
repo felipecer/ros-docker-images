@@ -1,0 +1,13 @@
+services:
+  ros2-humble-arm-base-container:
+    image: ros2-foxy-arm-base  # Your base image name
+    container_name: ros2_foxy_arm_base_container  # Descriptive name for the container
+    platform: linux/arm64
+    network_mode: "host"  # Use host network mode for communication with other ROS nodes
+    stdin_open: true  # Keep the container interactive for SSH access
+    tty: true         # Allocate a pseudo-TTY for SSH access
+    environment:
+      - ROS_DOMAIN_ID=30
+      - ROS_LOCALHOST_ONLY=0  # Allow non-localhost communication
+    volumes:
+      - /dev:/dev  # Optional: access to host devices (e.g., hardware for testing)

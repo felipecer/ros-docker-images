@@ -1,0 +1,47 @@
+# Use your existing ROS 2 Humble ARM base image
+FROM ros2-humble-arm-base AS base
+
+# Set environment variables
+ENV ROS_DISTRO=humble
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TURTLEBOT3_MODEL=burger  
+
+# Set LDS_MODEL in the environment
+RUN echo 'export LDS_MODEL=LDS-01' >> ~/.bashrc
+
+# Install TurtleBot3 dependencies
+RUN apt-get update && apt-get install -y \
+    python3-pip python3-setuptools python3-distutils \
+    python3-argcomplete \
+    python3-colcon-common-extensions \
+    libboost-system-dev \
+    build-essential \
+    ros-humble-hls-lfcd-lds-driver \
+    ros-humble-turtlebot3-msgs \
+    ros-humble-dynamixel-sdk \
+    libudev-dev
+
+RUN python3 -m pip uninstall setuptools
+RUN python3 -m pip install setuptools==58.2.0 
+# RUN apt-get install ros-humble-hardware-interface
+RUN apt-get update && apt-get install -y \
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers    
+
+# Create TurtleBot3 workspace and clone repositories
+RUN mkdir -p /root/turtlebot3_ws/src && \
+    cd /root/turtlebot3_ws/src && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/DynamixelSDK.git && \
+    git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
+    git clone -b ros2-devel https://github.com/ROBOTIS-GIT/ld08_driver.git
+
+RUN cd /root/turtlebot3_ws/src/turtlebot3 && \
+    rm -r turtlebot3_cartographer turtlebot3_navigation2
+
+RUN /bin/bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-install --parallel-workers 16"
+
+
+# # Build TurtleBot3 workspace
+# RUN cd /root/turtlebot3_ws && \
+#     colcon build --symlink-install --parallel-workers 16

@@ -1,0 +1,39 @@
+# Stage 1: Use the ROS 2 Foxy ARM base image to install dependencies
+FROM ros2-foxy-arm-base AS base
+
+# Set environment variables
+ENV ROS_DISTRO=foxy
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TURTLEBOT3_MODEL=burger
+
+# Install dependencies for building TurtleBot3 packages
+RUN apt-get update && apt-get install -y \
+    python3-argcomplete \
+    python3-colcon-common-extensions \
+    libboost-system-dev \
+    build-essential \
+    ros-foxy-hls-lfcd-lds-driver \
+    ros-foxy-turtlebot3-msgs \
+    ros-foxy-dynamixel-sdk \
+    libudev-dev
+
+# Create workspace and clone TurtleBot3 repositories
+RUN mkdir -p /root/turtlebot3_ws/src && \
+    cd /root/turtlebot3_ws/src && \
+    git clone -b foxy-devel https://github.com/ROBOTIS-GIT/turtlebot3.git && \
+    cd turtlebot3 && \
+    rm -r turtlebot3_cartographer turtlebot3_navigation2
+
+# Clone additional driver
+RUN cd /root/turtlebot3_ws/src && \
+    git clone -b ros2-devel https://github.com/ROBOTIS-GIT/ld08_driver.git
+
+# Stage 2: Build the TurtleBot3 packages
+FROM base AS builder
+
+# Build the TurtleBot3 workspace
+RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && cd /root/turtlebot3_ws && colcon build --symlink-install --parallel-workers 16"
+
+# Stage 3: Output the compiled workspace (export stage)
+FROM scratch AS export-stage
+COPY --from=builder /root/turtlebot3_ws/install /output/

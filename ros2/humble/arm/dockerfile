@@ -1,0 +1,64 @@
+# Stage 1: Base Image for ARM64 and System Dependencies
+FROM arm64v8/ubuntu:22.04 AS base
+
+# Set environment variables
+ENV ROS_DISTRO humble
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install necessary base dependencies
+RUN apt-get update && apt-get install -y \
+    locales \
+    curl \
+    gnupg2 \
+    lsb-release \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    sudo
+
+# Set locale
+RUN locale-gen en_US en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
+# Add the ROS 2 GPG key
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | apt-key add -
+
+# Add ROS 2 apt repository for Humble on ARM64
+RUN sh -c 'echo "deb [arch=arm64] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
+
+# Stage 2: Install ROS Base and Developer Tools
+FROM base AS ros-base
+
+# Update the package index
+RUN apt-get update
+
+# Install ROS 2 Humble Base and Development Tools
+RUN apt-get install -y \
+    ros-humble-ros-base \
+    ros-dev-tools
+
+# Initialize rosdep
+RUN rosdep init && rosdep update
+
+# Stage 3: Install ROS Demos
+FROM ros-base AS ros-demos
+
+# Install ROS Humble demo nodes for C++ and Python
+RUN apt-get install -y \
+    ros-humble-demo-nodes-cpp \
+    ros-humble-demo-nodes-py
+
+# Stage 4: Final Image (Lean and ready-to-use)
+FROM ros-demos AS final
+
+# Set up the ROS environment
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+RUN /bin/bash -c "source ~/.bashrc"
+
+# Clean up unnecessary files to reduce image size
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Default command
+CMD ["/bin/bash"]
