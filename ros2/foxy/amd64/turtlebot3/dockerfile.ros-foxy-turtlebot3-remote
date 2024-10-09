@@ -23,6 +23,9 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "export ROS_DOMAIN_ID=30 #TURTLEBOT3" >> ~/.bashrc && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /root/.bashrc
 
+RUN mkdir -p ~/turtlebot3_ws/src && cd ~/turtlebot3_ws/src/
+RUN git clone -b foxy-devel https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+RUN cd ~/turtlebot3_ws && colcon build --symlink-install
 # Source the ROS environment for the default shell session
 RUN /bin/bash -c "source ~/.bashrc"
 
