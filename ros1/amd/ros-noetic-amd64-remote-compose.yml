@@ -1,0 +1,27 @@
+services:
+  ros_noetic:
+    image: ros_noetic_amd64  # Nombre de la imagen para AMD64
+    container_name: ros_noetic_amd64_container
+    privileged: true  # Necesario para acceso a los dispositivos del host (USB, etc.)
+    
+    # Pasar todos los dispositivos USB al contenedor
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyS0:/dev/ttyS0"  # Añade más dispositivos según sea necesario
+
+    # Compartir los recursos de red con el host
+    network_mode: "host"
+
+    # Volumen para el workspace de ROS
+    volumes:
+      - ./catkin_ws:/root/catkin_ws  # Mapea el directorio local al workspace de catkin dentro del contenedor
+
+    # Variables de entorno para configurar ROS
+    environment:
+      - ROS_MASTER_URI=http://192.168.1.32:11311  # IP de tu PC (Master)
+      - ROS_HOSTNAME=192.168.1.32                 # IP de tu PC
+      - ROS_IP=192.168.1.32                       # IP de tu PC
+    
+    # Iniciar en modo interactivo para trabajar en bash
+    stdin_open: true
+    tty: true

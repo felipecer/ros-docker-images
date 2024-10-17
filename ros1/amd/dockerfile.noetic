@@ -1,0 +1,15 @@
+# Usar la imagen base de ROS Noetic para AMD64
+FROM ros:noetic
+
+# Instalar herramientas necesarias solo si no están ya incluidas
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-noetic-roscpp \
+    ros-noetic-rospy \
+    ros-noetic-std-msgs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Fuente del archivo setup.bash para configurar ROS automáticamente en nuevas sesiones
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+# Definir el punto de entrada del contenedor
+CMD ["/bin/bash"]

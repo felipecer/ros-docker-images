@@ -1,0 +1,24 @@
+# Usar la imagen base arm64v8/ros:noetic, que incluye ros-core y ros-base
+FROM arm64v8/ros:noetic-ros-base-focal
+
+# Instalar herramientas necesarias solo si no están ya incluidas
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-noetic-roscpp \
+    ros-noetic-rospy \
+    ros-noetic-std-msgs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear un workspace para ROS
+RUN mkdir -p /root/catkin_ws/src
+
+# Entrar al workspace
+WORKDIR /root/catkin_ws/
+
+# Construir el workspace (esto es necesario para cualquier paquete que agregues en src)
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin_make"
+
+# Fuente del archivo setup.bash para configurar ROS automáticamente en nuevas sesiones
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+# Definir el punto de entrada del contenedor
+CMD ["/bin/bash"]

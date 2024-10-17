@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  ros_noetic:
+    image: ros_noetic_rpi  # Nombre de la imagen para ARM64 en la RPI
+    container_name: ros_noetic_rpi_container
+    privileged: true  # Necesario para acceso a los dispositivos del host (USB, etc.)
+    
+    # Pasar todos los dispositivos USB al contenedor
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyS0:/dev/ttyS0"  # Añade más dispositivos según sea necesario
+
+    # Compartir los recursos de red con el host
+    network_mode: "host"
+
+    # Volumen para el workspace de ROS
+    volumes:
+      - /home/catkin_ws:/root/catkin_ws  # Mapea el directorio local al workspace de catkin dentro del contenedor
+
+    # Variables de entorno para configurar ROS
+    environment:
+      - ROS_MASTER_URI=http://192.168.1.32:11311  # IP de tu PC (Master)
+      - ROS_HOSTNAME=192.168.1.27                 # IP de la Raspberry Pi
+      - ROS_IP=192.168.1.27                       # IP de la Raspberry Pi
+    
+    # Iniciar en modo interactivo para trabajar en bash
+    stdin_open: true
+    tty: true
